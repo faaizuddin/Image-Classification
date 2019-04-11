@@ -1,4 +1,5 @@
 # I import the data using tensorflow.python.keras
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -17,7 +18,8 @@ from tensorflow.python.keras._impl.keras.datasets.cifar import load_batch
 from tensorflow.python.keras._impl.keras.utils.data_utils import get_file
 from tensorflow.python.util.tf_export import tf_export
 
-
+#A function is created to load the dataset which returns the test and train data. 
+#It downloads the data from the given URL. Number of training samples is explicitly defined to be 50000.
 
 @tf_export('keras.datasets.cifar10.load_data')
 def load_data():
@@ -54,6 +56,8 @@ def load_data():
 
 x_train, y_train, x_test, y_test = load_data()
 
+
+
 def toImage(array, rows = 32, columns = 32):
     return array.reshape(3, rows, columns).transpose([1, 2, 0])
 
@@ -61,6 +65,9 @@ def toData(img, rows = 32, columns = 32):
     return img.transpose([-1, -2, 0]).flatten()
 
 from sklearn.preprocessing import MinMaxScaler
+
+## Then I normalize the data through sklearn library to Scale input vectors individually to unit norm (vector length).
+
 def test_normalize(normalize):
     test_shape = (np.random.choice(range(1000)), 32, 32, 3)
     test_numbers = np.random.choice(range(256), test_shape)
@@ -89,10 +96,15 @@ def normalize(x):
 
 x_train = normalize(x_train)
 
+# One Hot Encoding is performed to Encode categorical integer features using a one-hot aka one-of-K scheme
+# with the help of sklearn OneHotEncoder
+
 enc = OneHotEncoder()
 y_train = enc.fit_transform(np.array(y_train).reshape(-1,1)).todense()
 y_test = enc.transform(np.array(y_test).reshape(-1,1)).todense()
 
+# Next step is data augmentation.
+# Data augmentation is a useful process to prevent overfitting
 
 def flipImage(srcImage):
     flippedImages = []
@@ -114,6 +126,8 @@ def augmentImage(imageVector):
 img = augmentImage(x_train[211])
 
 from random import shuffle
+
+# To perform mini-batch optimization, a function is created to batch over the dataset.
 
 def batchIterator(x, y, batchSize, batchCount):
     size = len(x)
@@ -147,6 +161,8 @@ for x, y in zip(x_test, y_test):
 processedTestX = np.stack(processedTestX, axis=0)
 processedTestY = np.stack(processedTestY, axis=0)
 
+# Furthermore, helper functions are created for the neural network.
+
 def createConvolutionLayer(inputLayer, kernelHeight, kernelWidth, channelSize, kernelCount, strideX, strideY):
     """This will create a four dimensional tensor
     In this tensor the first and second dimension define the kernel height and width
@@ -177,6 +193,8 @@ def fullyConnectedLayer(inputLayer, outputLayerCount):
     bias = tf.Variable(tf.constant(0.05, shape=[outputLayerCount]))
     layer = tf.matmul(inputLayer, weights) + bias
     return layer
+
+# To add the normalization layer, a batch normalization function is created.
 
 def batchNormalization(inputLayer, isTraining):
     beta = tf.Variable(tf.constant(0.0, shape=[inputLayer.get_shape()[-1]]), trainable=True)
@@ -225,6 +243,7 @@ def log_histogram(writer, tag, values, step, bins=1000):
     writer.add_summary(summary, step)
     writer.flush()
     
+# Now we have to train the neural network and build up the architecture    
 """Input is 4 dimensional tensor -1 so that the no of images can be infered on itself"""
 inputLayer = tf.placeholder(tf.float32, [None, 32, 32, 3])
 yTrue = tf.placeholder(tf.float32, shape=[None, 10])
@@ -234,6 +253,8 @@ isTraining = tf.placeholder(tf.bool, [])
 convolutionLayer1 = createConvolutionLayer(inputLayer, 2, 2, 3, 30, 1, 1)
 reluActivatedLayer1 = tf.nn.relu(convolutionLayer1)
 poolingLayer1 = tf.nn.max_pool(value=convolutionLayer1, ksize=[1, 1, 2, 1], strides = [1, 1, 1, 1], padding='SAME')
+
+# dropout layer to help prevent overfitting
 dropout0 = tf.nn.dropout(poolingLayer1, tf.to_float(0.5))
 bn1 = batchNormalization(dropout0, isTraining)
 convolutionLayer2 = createConvolutionLayer(poolingLayer1, 2, 2, 30, 30, 1, 1)
@@ -252,9 +273,12 @@ fc= fullyConnectedLayer(reluActivatedLayer3, 10)
 predictions = tf.argmax(tf.nn.softmax(fc), axis = 1)
 actual = tf.argmax(yTrue, axis = 1)
 
+# Softmax Entropy:
 loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=fc, labels = yTrue)
 
 costFunction = tf.reduce_mean(loss)
+
+# The model is trained using AdamOptimizer
 optimizer = tf.train.AdamOptimizer().minimize(costFunction)
 
 accuracy = tf.reduce_mean(tf.cast(tf.equal(predictions, actual), tf.float32))
@@ -263,10 +287,13 @@ session = tf.Session()
 """Initialize the global variables"""
 session.run(tf.global_variables_initializer())
 
+# Tensorboard is then created
 logs_path = '/tmp/tensorflow_logs/exampleCNN/'
 summaryWriter =  tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
 trainAccList = []
 testAccList = []
+
+# The training and testing accuracy is collected over 50 epochs.
 for i in range(0, 50):
     print("Epoch"+str(i))
     summary = tf.Summary()
