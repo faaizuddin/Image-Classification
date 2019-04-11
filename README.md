@@ -17,3 +17,5 @@ RMSprop is a special version of Adagrad. Instead of letting all of the gradients
 Adam is another way of using past gradients to calculate current gradients. Adam also utilizes the concept of momentum by adding fractions of previous gradients to the current one. This optimizer has become pretty widespread, and is practically accepted for use in training neural nets.
 ![alt text](https://github.com/faaizuddin/Image-Classification/blob/master/TrAccOpt.png)
 ![alt text](https://github.com/faaizuddin/Image-Classification/blob/master/TeAccOpt.png)
+
+GradientOptimizer is pretty basic and does not perform as well as the others. It requires more hyperparameter tuning before it would converge as quickly.
