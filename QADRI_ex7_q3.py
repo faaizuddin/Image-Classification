@@ -1,3 +1,4 @@
+# I import the data using tensorflow.python.keras
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -15,6 +16,8 @@ from tensorflow.python.keras._impl.keras import backend as K
 from tensorflow.python.keras._impl.keras.datasets.cifar import load_batch
 from tensorflow.python.keras._impl.keras.utils.data_utils import get_file
 from tensorflow.python.util.tf_export import tf_export
+
+
 
 @tf_export('keras.datasets.cifar10.load_data')
 def load_data():
